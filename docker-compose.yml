@@ -19,5 +19,5 @@ services:
     volumes:
       - /path/to/librespeed/config:/config
     ports:
-      - 4005:80
+      - 4006:80
     restart: unless-stopped
