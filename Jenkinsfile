@@ -18,7 +18,7 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                sshagent(['akr']) {
+                sshagent(['jenkins-ssh-192.66']) {
                     sh """
                     echo ">>> Create folder if not exists"
                     ssh -o StrictHostKeyChecking=no ${TARGET_USER}@${TARGET_HOST} '
