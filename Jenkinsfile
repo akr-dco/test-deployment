@@ -2,9 +2,9 @@ pipeline {
     agent any
 
     environment {
-        TARGET_USER = "akr"
+        TARGET_USER = "akr_onprem"
         TARGET_HOST = "192.168.192.66"
-        TARGET_DIR  = "/home/akr/docker-cicd/${env.BRANCH_NAME}"
+        TARGET_DIR  = "/home/akr_onprem"
     }
 
     stages {
@@ -12,13 +12,13 @@ pipeline {
         stage('Info') {
             steps {
                 echo "Branch: ${env.BRANCH_NAME}"
-                echo "Deploy target: ${TARGET_HOST}:${TARGET_DIR}"
+                echo "Deploy target: ${TARGET_USER}@${TARGET_HOST}:${TARGET_DIR}"
             }
         }
 
         stage('Deploy') {
             steps {
-                sshagent(['jenkins-ssh-192.66']) {
+                sshagent(['jenkins-9090']) {
                     sh """
                     echo ">>> Create folder if not exists"
                     ssh -o StrictHostKeyChecking=no ${TARGET_USER}@${TARGET_HOST} '
