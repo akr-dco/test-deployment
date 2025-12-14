@@ -2,7 +2,7 @@
 services:
   librespeed:
     image: lscr.io/linuxserver/librespeed:latest
-    container_name: librespeed
+    container_name: librespeed_prod
     environment:
       - PUID=1000
       - PGID=1000
