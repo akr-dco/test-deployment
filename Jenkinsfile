@@ -27,7 +27,7 @@ pipeline {
 
         stage('Prepare Target') {
             steps {
-                sshagent(['jenkins-onprem']) {
+                sshagent(['privatekey-akr']) {
                     sh """
                     ssh -o StrictHostKeyChecking=no ${TARGET_USER}@${TARGET_HOST} '
                         mkdir -p ${TARGET_DIR}
@@ -39,7 +39,7 @@ pipeline {
 
         stage('Sync Repository') {
             steps {
-                sshagent(['jenkins-onprem']) {
+                sshagent(['privatekey-akr']) {
                     sh """
                     rsync -avz --delete \
                         --exclude '.git' \
@@ -53,7 +53,7 @@ pipeline {
 
         stage('Deploy Docker Compose') {
             steps {
-                sshagent(['jenkins-onprem']) {
+                sshagent(['privatekey-akr']) {
                     sh """
                     ssh -o StrictHostKeyChecking=no ${TARGET_USER}@${TARGET_HOST} '
                         cd ${TARGET_DIR} &&
