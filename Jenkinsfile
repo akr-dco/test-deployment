@@ -4,21 +4,30 @@ pipeline {
     environment {
         TARGET_USER = "onprem"
         TARGET_HOST = "192.168.192.66"
-        TARGET_DIR  = "/home/onprem/cicd-testing"
     }
 
     stages {
 
-        stage('Info') {
+        stage('Resolve Target Directory') {
             steps {
+                script {
+                    if (env.BRANCH_NAME == 'main') {
+                        env.TARGET_DIR = "/home/onprem/cicd-prod"
+                    } else if (env.BRANCH_NAME == 'staging') {
+                        env.TARGET_DIR = "/home/onprem/cicd-testing"
+                    } else {
+                        error "Branch ${env.BRANCH_NAME} is not allowed to deploy"
+                    }
+                }
+
                 echo "Branch        : ${env.BRANCH_NAME}"
-                echo "Deploy target : ${TARGET_USER}@${TARGET_HOST}:${TARGET_DIR}"
+                echo "Deploy target : ${TARGET_USER}@${TARGET_HOST}:${env.TARGET_DIR}"
             }
         }
 
         stage('Prepare Target') {
             steps {
-                sshagent(['privatekey-akr']) {
+                sshagent(['jenkins-onprem']) {
                     sh """
                     ssh -o StrictHostKeyChecking=no ${TARGET_USER}@${TARGET_HOST} '
                         mkdir -p ${TARGET_DIR}
@@ -28,12 +37,15 @@ pipeline {
             }
         }
 
-        stage('Sync docker-compose') {
+        stage('Sync Repository') {
             steps {
-                sshagent(['privatekey-akr']) {
+                sshagent(['jenkins-onprem']) {
                     sh """
-                    scp -o StrictHostKeyChecking=no docker-compose.yml \
-                        ${TARGET_USER}@${TARGET_HOST}:${TARGET_DIR}/docker-compose.yml
+                    rsync -avz --delete \
+                        --exclude '.git' \
+                        --exclude '.jenkins' \
+                        ./ \
+                        ${TARGET_USER}@${TARGET_HOST}:${TARGET_DIR}/
                     """
                 }
             }
@@ -41,7 +53,7 @@ pipeline {
 
         stage('Deploy Docker Compose') {
             steps {
-                sshagent(['privatekey-akr']) {
+                sshagent(['jenkins-onprem']) {
                     sh """
                     ssh -o StrictHostKeyChecking=no ${TARGET_USER}@${TARGET_HOST} '
                         cd ${TARGET_DIR} &&
@@ -56,10 +68,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ Deployment SUCCESS"
+            echo "✅ Deployment SUCCESS for ${env.BRANCH_NAME}"
         }
         failure {
-            echo "❌ Deployment FAILED"
+            echo "❌ Deployment FAILED for ${env.BRANCH_NAME}"
         }
     }
 }
