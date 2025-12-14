@@ -18,7 +18,7 @@ pipeline {
 
         stage('Prepare Target') {
             steps {
-                sshagent(['jenkins-onprem']) {
+                sshagent(['privatekey-akr']) {
                     sh """
                     ssh -o StrictHostKeyChecking=no ${TARGET_USER}@${TARGET_HOST} '
                         mkdir -p ${TARGET_DIR}
@@ -30,7 +30,7 @@ pipeline {
 
         stage('Sync docker-compose') {
             steps {
-                sshagent(['jenkins-onprem']) {
+                sshagent(['privatekey-akr']) {
                     sh """
                     scp -o StrictHostKeyChecking=no docker-compose.yml \
                         ${TARGET_USER}@${TARGET_HOST}:${TARGET_DIR}/docker-compose.yml
@@ -41,7 +41,7 @@ pipeline {
 
         stage('Deploy Docker Compose') {
             steps {
-                sshagent(['jenkins-onprem']) {
+                sshagent(['privatekey-akr']) {
                     sh """
                     ssh -o StrictHostKeyChecking=no ${TARGET_USER}@${TARGET_HOST} '
                         cd ${TARGET_DIR} &&
