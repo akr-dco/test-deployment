@@ -1,23 +1,9 @@
----
 services:
-  librespeed:
-    image: lscr.io/linuxserver/librespeed:latest
-    container_name: librespeed_dev
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Etc/UTC
-      - PASSWORD=PASSWORD
-      - CUSTOM_RESULTS=false #optional
-      - DB_TYPE=sqlite #optional
-      - DB_NAME=DB_NAME #optional
-      - DB_HOSTNAME=DB_HOSTNAME #optional
-      - DB_USERNAME=DB_USERNAME #optional
-      - DB_PASSWORD=DB_PASSWORD #optional
-      - DB_PORT=DB_PORT #optional
-      - IPINFO_APIKEY=ACCESS_TOKEN #optional
-    volumes:
-      - /path/to/librespeed/config:/config
+  stirling-pdf-dev:
+    image: stirlingtools/stirling-pdf:latest
+    container_name: stirling-pdf-dev
     ports:
-      - 4008:80
+      - '4010:8080'
+    volumes:
+      - ./stirling-data:/configs
     restart: unless-stopped
