@@ -2,41 +2,64 @@ pipeline {
     agent any
 
     environment {
-        TARGET_USER = "akr_onprem"
+        TARGET_USER = "onprem"
         TARGET_HOST = "192.168.192.66"
-        TARGET_DIR  = "/home/akr_onprem"
+        TARGET_DIR  = "/home/onprem/cicd-testing"
     }
 
     stages {
 
         stage('Info') {
             steps {
-                echo "Branch: ${env.BRANCH_NAME}"
-                echo "Deploy target: ${TARGET_USER}@${TARGET_HOST}:${TARGET_DIR}"
+                echo "Branch        : ${env.BRANCH_NAME}"
+                echo "Deploy target : ${TARGET_USER}@${TARGET_HOST}:${TARGET_DIR}"
             }
         }
 
-        stage('Deploy') {
+        stage('Prepare Target') {
             steps {
-                sshagent(['jenkins-9090']) {
+                sshagent(['jenkins-onprem']) {
                     sh """
-                    echo ">>> Create folder if not exists"
                     ssh -o StrictHostKeyChecking=no ${TARGET_USER}@${TARGET_HOST} '
                         mkdir -p ${TARGET_DIR}
                     '
-
-                    echo ">>> Copy docker-compose"
-                    scp -o StrictHostKeyChecking=no docker-compose.yml ${TARGET_USER}@${TARGET_HOST}:${TARGET_DIR}/docker-compose.yml
-
-                    echo ">>> Deploy compose"
-                    ssh -o StrictHostKeyChecking=no ${TARGET_USER}@${TARGET_HOST} "
-                        cd ${TARGET_DIR} &&
-                        docker compose pull &&
-                        docker compose up -d
-                    "
                     """
                 }
             }
+        }
+
+        stage('Sync docker-compose') {
+            steps {
+                sshagent(['jenkins-onprem']) {
+                    sh """
+                    scp -o StrictHostKeyChecking=no docker-compose.yml \
+                        ${TARGET_USER}@${TARGET_HOST}:${TARGET_DIR}/docker-compose.yml
+                    """
+                }
+            }
+        }
+
+        stage('Deploy Docker Compose') {
+            steps {
+                sshagent(['jenkins-onprem']) {
+                    sh """
+                    ssh -o StrictHostKeyChecking=no ${TARGET_USER}@${TARGET_HOST} '
+                        cd ${TARGET_DIR} &&
+                        docker compose pull &&
+                        docker compose up -d
+                    '
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Deployment SUCCESS"
+        }
+        failure {
+            echo "❌ Deployment FAILED"
         }
     }
 }
